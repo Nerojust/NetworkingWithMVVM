@@ -8,31 +8,24 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
+    public static final String BASE_URL = "https://8154-102-89-22-39.ngrok-free.app";
+    static Retrofit myRetrofit;
+    static NetworkService myNetworkService;
 
-    public static final String BASE_URL = "https://30a6-102-89-33-39.ngrok-free.app";
-
-    public static Retrofit getRetrofit(){
+    public static Retrofit getRetrofit() {
 
         HttpLoggingInterceptor myHttpLoggingInterceptor = new HttpLoggingInterceptor();
         myHttpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient myClient = new OkHttpClient.Builder().addInterceptor(myHttpLoggingInterceptor).build();
-
-        Retrofit myRetrofit = new Retrofit.Builder().baseUrl(BASE_URL).client(myClient).
-                addConverterFactory(GsonConverterFactory.create()).build();
-
+        if (myRetrofit == null) {
+            myRetrofit = new Retrofit.Builder().baseUrl(BASE_URL).client(myClient).
+                    addConverterFactory(GsonConverterFactory.create()).build();
+        }
         return myRetrofit;
     }
 
-    public static NetworkService getNetworkService(){
-
-        NetworkService myNetworkService = getRetrofit().create(NetworkService.class);
-
-        return myNetworkService;
+    public static NetworkService getNetworkService() {
+        return getRetrofit().create(NetworkService.class);
     }
-
-
-
-
-
 }

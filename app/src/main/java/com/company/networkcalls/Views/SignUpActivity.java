@@ -1,34 +1,28 @@
 package com.company.networkcalls.Views;
 
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
+
 import com.company.networkcalls.R;
 import com.company.networkcalls.SignUpPackage.SignUpResponseModel;
 import com.company.networkcalls.Utilities.AppConstant;
 import com.company.networkcalls.ViewModels.SignUpViewModel;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.company.networkcalls.models.Resource;
 
 public class SignUpActivity extends AppCompatActivity {
 //    private static final String TAG = "RegistrationActivity";
@@ -58,7 +52,7 @@ public class SignUpActivity extends AppCompatActivity {
 
 
         inItView();
-        inItModel();
+        initSubscribers();
         inItListener();
         textListener();
 
@@ -77,13 +71,12 @@ public class SignUpActivity extends AppCompatActivity {
 
         mySignUpViewModel = ViewModelProviders.of(this).get(SignUpViewModel.class);
         mySharedPreference = getSharedPreferences(getString(R.string.my_pref), Context.MODE_PRIVATE);
-
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
         myEditor = mySharedPreference.edit();
         myEditor.putString(AppConstant.FIRST_NAME, appFirstName);
         myEditor.putString(AppConstant.LAST_NAME, appLastName);
@@ -92,14 +85,10 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void inItListener() {
-
         signUpButton();
-
-
     }
 
     private void signUpButton() {
-
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -113,58 +102,73 @@ public class SignUpActivity extends AppCompatActivity {
 
 
                 if (validateFirstName() & validatePassword() & validateLastName() & validatePhoneNumber() & validateUsername() & validatePassword()) {
-
-                    mySignUpViewModel.getSignUpDetails(userFirstName, userLastName, userPhoneNumber, userPassword, userFingerPrint, userUsername);
-
+                    mySignUpViewModel.executeSignUpRequest(userFirstName, userLastName, userPhoneNumber, userPassword, userFingerPrint, userUsername);
                     myProgressBar.setVisibility(View.VISIBLE);
                 }
-
-
             }
         });
     }
 
-    public void inItModel() {
-
-        mySignUpViewModel.getSignUpLivedata().observe(this, new Observer<SignUpResponseModel>() {
-            @Override
-            public void onChanged(SignUpResponseModel signUpResponseModel) {
-                signUpResponse = signUpResponseModel;
-
-                if (signUpResponseModel == null) {
+    public void initSubscribers() {
+        mySignUpViewModel.getSignUpLivedata().observe(this, this::processSignUpResponse);
 
 
-                    sendErrorDialog();
+//        mySignUpViewModel.getSignUpLivedata().observe(this, new Observer<SignUpResponseModel>() {
+//            @Override
+//            public void onChanged(SignUpResponseModel signUpResponseModel) {
+//                signUpResponse = signUpResponseModel;
+//                myProgressBar.setVisibility(View.GONE);
+//
+//                if (!signUpResponseModel.success) {
+//                    sendErrorDialog(signUpResponseModel.getErrors().get(0).getMessage());
+//                    return;
+//                }
+//
+//                appFirstName = signUpResponseModel.getResult().getFirstName();
+//                appLastName = signUpResponseModel.getResult().getLastName();
+//                appPhoneNumber = signUpResponseModel.getResult().getPhoneNumber();
+//
+//                String successMessage = signUpResponseModel.getMessage();
+//                Toast.makeText(SignUpActivity.this, successMessage, Toast.LENGTH_LONG).show();
+//
+//                Intent myIntent = new Intent(SignUpActivity.this, LogInActivity.class);
+//                startActivity(myIntent);
+//            }
+//        });
+    }
 
-                }
+    private void processSignUpResponse(Resource<SignUpResponseModel> signUpResponseModel) {
+        switch (signUpResponseModel.status) {
+            case SUCCESS:
+                myProgressBar.setVisibility(View.GONE);
 
-                if (signUpResponseModel != null) {
+                if (signUpResponseModel.data != null) {
+                    appFirstName = signUpResponseModel.data.getResult().getFirstName();
 
-                    myProgressBar.setVisibility(View.GONE);
+                    appLastName = signUpResponseModel.data.getResult().getLastName();
+                    appPhoneNumber = signUpResponseModel.data.getResult().getPhoneNumber();
 
-                    appFirstName = signUpResponseModel.getResult().getFirstName();
-                    appLastName = signUpResponseModel.getResult().getLastName();
-                    appPhoneNumber = signUpResponseModel.getResult().getPhoneNumber();
-
-
-                    String successMessage = signUpResponseModel.getMessage();
+                    String successMessage = signUpResponseModel.data.getMessage();
                     Toast.makeText(SignUpActivity.this, successMessage, Toast.LENGTH_LONG).show();
 
                     Intent myIntent = new Intent(SignUpActivity.this, LogInActivity.class);
                     startActivity(myIntent);
-
-                } else {
-
-                    Toast.makeText(SignUpActivity.this, "SignUp  failed", Toast.LENGTH_LONG).show();
-
-
                 }
+                break;
 
-            }
-        });
+            case ERROR:
+                myProgressBar.setVisibility(View.GONE);
+                sendErrorDialog(signUpResponseModel.message);
+
+                break;
+            case LOADING:
+                myProgressBar.setVisibility(View.VISIBLE);
+
+                break;
+        }
     }
 
-    private void sendErrorDialog() {
+    private void sendErrorDialog(String message) {
 
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(SignUpActivity.this);
         // inflate view
@@ -174,8 +178,8 @@ public class SignUpActivity extends AppCompatActivity {
         myBuilder.setCancelable(false);
 
         TextView ok = myView.findViewById(R.id.tv_ok);
-//        TextView message = myView.findViewById(R.id.tv_error_message);
-//        message.setText();
+        TextView msgView = myView.findViewById(R.id.tv_error_message);
+        msgView.setText(message);
 
         AlertDialog myDialog = myBuilder.create();
         myDialog.show();

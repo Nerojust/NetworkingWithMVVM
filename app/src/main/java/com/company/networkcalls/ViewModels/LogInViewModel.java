@@ -1,12 +1,14 @@
 package com.company.networkcalls.ViewModels;
 
-import android.util.Log;
-import android.widget.Toast;
+import static com.company.networkcalls.ApiClient.RetrofitClient.getNetworkService;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.company.networkcalls.ApiClient.RetrofitClient;
 import com.company.networkcalls.LogInPackage.LogInRequestModel;
 import com.company.networkcalls.LogInPackage.LogInResponseModel;
 
@@ -20,15 +22,15 @@ public class LogInViewModel extends ViewModel {
 
     private MutableLiveData<LogInResponseModel> logInResponseLiveData;
 
-    public LogInViewModel(){
+    public LogInViewModel() {
         this.logInResponseLiveData = new MutableLiveData<>();
     }
 
-    public MutableLiveData<LogInResponseModel> getLogInResponseLiveData(){
+    public MutableLiveData<LogInResponseModel> getLogInResponseLiveData() {
         return logInResponseLiveData;
     }
 
-    public void existingUser(String username, String fingerPrint , String password){
+    public void existingUser(String username, String fingerPrint, String password) {
 
         LogInRequestModel myLogInRequest = new LogInRequestModel();
         myLogInRequest.setUsername(username);
@@ -37,21 +39,17 @@ public class LogInViewModel extends ViewModel {
 
         Log.d(TAG, "Existing User Verification" + myLogInRequest);
 
-
-        Call<LogInResponseModel> myCall = RetrofitClient.getNetworkService().getLogInResponse(myLogInRequest);
+        Call<LogInResponseModel> myCall = getNetworkService().getLogInResponse(myLogInRequest);
         myCall.enqueue(new Callback<LogInResponseModel>() {
             @Override
-            public void onResponse(Call<LogInResponseModel> call, Response<LogInResponseModel> response) {
-
-                if(response.isSuccessful() & response.body() != null){
-
+            public void onResponse(@NonNull Call<LogInResponseModel> call, @Nullable Response<LogInResponseModel> response) {
+                if (response != null && response.isSuccessful() & response.body() != null) {
                     logInResponseLiveData.postValue(response.body());
-
                 }
             }
 
             @Override
-            public void onFailure(Call<LogInResponseModel> call, Throwable t) {
+            public void onFailure(@NonNull Call<LogInResponseModel> call, @NonNull Throwable t) {
 
                 logInResponseLiveData.postValue(null);
 
