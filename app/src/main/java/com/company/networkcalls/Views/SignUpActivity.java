@@ -111,30 +111,6 @@ public class SignUpActivity extends AppCompatActivity {
 
     public void initSubscribers() {
         mySignUpViewModel.getSignUpLivedata().observe(this, this::processSignUpResponse);
-
-
-//        mySignUpViewModel.getSignUpLivedata().observe(this, new Observer<SignUpResponseModel>() {
-//            @Override
-//            public void onChanged(SignUpResponseModel signUpResponseModel) {
-//                signUpResponse = signUpResponseModel;
-//                myProgressBar.setVisibility(View.GONE);
-//
-//                if (!signUpResponseModel.success) {
-//                    sendErrorDialog(signUpResponseModel.getErrors().get(0).getMessage());
-//                    return;
-//                }
-//
-//                appFirstName = signUpResponseModel.getResult().getFirstName();
-//                appLastName = signUpResponseModel.getResult().getLastName();
-//                appPhoneNumber = signUpResponseModel.getResult().getPhoneNumber();
-//
-//                String successMessage = signUpResponseModel.getMessage();
-//                Toast.makeText(SignUpActivity.this, successMessage, Toast.LENGTH_LONG).show();
-//
-//                Intent myIntent = new Intent(SignUpActivity.this, LogInActivity.class);
-//                startActivity(myIntent);
-//            }
-//        });
     }
 
     private void processSignUpResponse(Resource<SignUpResponseModel> signUpResponseModel) {
