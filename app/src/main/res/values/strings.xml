@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">NetworkCalls</string>
+    <string name="my_pref">SharedPreferences</string>
+</resources>
